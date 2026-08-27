@@ -1,3 +1,7 @@
+/**
+ * Playwright config for Image Compressor E2E tests
+ * Uses language persistence (localStorage: 'image-compressor-lang')
+ */
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
@@ -14,7 +18,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   
   // Workers: undefined = auto (optimal for local), 1 on CI
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 1 : 2,
   
   // Reporter configuration
   reporter: [
