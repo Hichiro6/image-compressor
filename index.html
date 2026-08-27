@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Compress JPEG, PNG, WebP images — 100% in your browser, nothing uploaded" />
+  <title>Image Compressor — Compress Photos Online</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/styles/main.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__brand">
+        <div class="header__logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="20" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M10 14l-4 6h16l-6-8-4 4-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="18" cy="9" r="2" fill="#6366f1"/>
+            <path d="M22 2l2 2M24 2l-2 2" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="header__title">Image Compressor</h1>
+          <p class="header__tagline" data-i18n="app.tagline">Compress JPEG, PNG, WebP images — 100% in your browser</p>
+        </div>
+      </div>
+      <div class="header__actions">
+        <span class="badge badge--privacy" data-i18n="privacy.badge" tabindex="0" data-i18n-attr="title: privacy.tooltip">Client-side only</span>
+        <div id="lang-selector"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Dropzone -->
+    <section id="dropzone-section" class="dropzone-section">
+      <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Drop images">
+        <svg class="dropzone__icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="10" y="10" width="44" height="44" rx="6" fill="none" stroke="currentColor" stroke-width="3"/>
+          <path d="M20 38l6-8 4 4 6-6 8 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="24" cy="22" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M32 2v6M29 5l3-3 3 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dropzone__title" data-i18n="dropzone.title">Drop images here</p>
+        <p class="dropzone__subtitle" data-i18n="dropzone.subtitle">or click to browse</p>
+        <p class="dropzone__accept" data-i18n="dropzone.accept">JPEG, PNG, WebP supported</p>
+      </div>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" multiple hidden />
+    </section>
+
+    <!-- Workspace -->
+    <section id="workspace" class="workspace" hidden>
+      <div class="workspace__header">
+        <div class="workspace__info">
+          <span id="file-count" class="workspace__filename"></span>
+        </div>
+        <div class="workspace__actions">
+          <button id="btn-add-more" class="btn btn--secondary btn-sm" data-i18n="btn.addMore">Add More</button>
+          <button id="btn-reset" class="btn btn--ghost btn-sm" data-i18n="btn.reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="workspace__body">
+        <!-- Left: Images grid -->
+        <div class="pages-section">
+          <div class="pages-header">
+            <h2 class="pages-title" data-i18n="result.original">Original</h2>
+          </div>
+          <div id="images-grid" class="pages-grid" role="list" aria-label="Images"></div>
+        </div>
+
+        <!-- Right: Controls -->
+        <aside class="controls-section">
+          <h2 class="controls-title" data-i18n="controls.title">Compression Settings</h2>
+
+          <div class="control-group">
+            <label for="format-select" class="control-label" data-i18n="controls.format">Output Format</label>
+            <select id="format-select" class="control-input">
+              <option value="keep" data-i18n="controls.keepOriginal">Keep Original</option>
+              <option value="jpeg" data-i18n="controls.convertJpeg">Convert to JPEG</option>
+              <option value="webp" data-i18n="controls.convertWebp">Convert to WebP</option>
+              <option value="png" data-i18n="controls.convertPng">Convert to PNG</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="quality-slider" class="control-label" data-i18n="controls.quality">Quality</label>
+            <div class="slider-wrapper">
+              <input type="range" id="quality-slider" min="10" max="100" value="80" step="5" class="control-slider" />
+              <span id="quality-value" class="slider-value">80%</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="resize-toggle" class="control-label" data-i18n="controls.resize">Resize</label>
+            <input type="checkbox" id="resize-toggle" class="control-checkbox" />
+          </div>
+
+          <div class="control-group" id="resize-fields" hidden>
+            <label for="max-width" class="control-label" data-i18n="controls.maxWidth">Max Width (px)</label>
+            <input type="number" id="max-width" class="control-input" placeholder="1920" min="1" />
+            <label for="max-height" class="control-label" data-i18n="controls.maxHeight">Max Height (px)</label>
+            <input type="number" id="max-height" class="control-input" placeholder="1080" min="1" />
+          </div>
+
+          <!-- Progress -->
+          <div id="progress-container" class="progress-container" hidden>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="progress-text" class="progress-text"></span>
+              <span id="progress-percent" class="progress-percent">0%</span>
+            </div>
+          </div>
+
+          <!-- Result -->
+          <div id="result-info" class="result-info" hidden>
+            <span class="result-icon">✓</span>
+            <span class="result-label" data-i18n="result.label">Compression complete</span>
+            <span id="result-details" class="result-details"></span>
+          </div>
+
+          <!-- Actions -->
+          <div class="actions">
+            <button id="btn-compress" class="btn btn--primary" data-i18n="btn.compress">Compress</button>
+            <button id="btn-download" class="btn btn--primary" data-i18n="btn.download" hidden>Download</button>
+            <button id="btn-download-all" class="btn btn--secondary" data-i18n="btn.downloadAll" hidden>Download All</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <span class="footer__privacy" data-i18n="footer.privacy">Your images never leave your browser</span>
+      <a href="https://github.com/Hichiro6/image-compressor" class="footer__link" data-i18n="footer.openSource">Open Source</a>
+    </div>
+  </footer>
+
+  <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
