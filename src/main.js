@@ -5,6 +5,9 @@
 
 import { initI18n, t } from './i18n.js';
 
+// Maximum canvas area (Mobile Safari ~16.7MP limit)
+const MAX_CANVAS_PIXELS = 16777216;
+
 // State
 let uploadedFiles = [];
 let compressedImages = [];
@@ -101,7 +104,7 @@ function processFiles(files) {
   uploadedFiles.push(
     ...files.map((file) => ({
       file,
-      preview: null,
+      previewUrl: null,
       width: 0,
       height: 0,
       compressedBlob: null,
@@ -110,10 +113,17 @@ function processFiles(files) {
   );
 
   renderThumbnails();
-  announce(t('app.tagline'));
+  announce(t('progress.loaded', { count: files.length }));
 }
 
 async function renderThumbnails() {
+  // Revoke any previous preview URLs before clearing
+  for (const item of uploadedFiles) {
+    if (item.previewUrl) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
+  }
+
   imagesGrid.innerHTML = '';
 
   for (let i = 0; i < uploadedFiles.length; i++) {
@@ -123,12 +133,9 @@ async function renderThumbnails() {
       const bitmap = await createImageBitmap(item.file);
       item.width = bitmap.width;
       item.height = bitmap.height;
+      bitmap.close();
 
-      const reader = new FileReader();
-      item.preview = await new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(item.file);
-      });
+      item.previewUrl = URL.createObjectURL(item.file);
     } catch (err) {
       console.error('Failed to load image:', err);
     }
@@ -138,15 +145,13 @@ async function renderThumbnails() {
     const card = document.createElement('div');
     card.className = 'page-card';
     card.setAttribute('role', 'listitem');
-    card.setAttribute('aria-label', `Image ${index + 1}`);
+    card.setAttribute('aria-label', `Image ${index + 1}: ${item.file.name}`);
 
     const img = document.createElement('img');
-    img.src = item.preview;
+    img.src = item.previewUrl;
     img.alt = item.file.name;
     img.loading = 'lazy';
-    img.style.width = '100%';
-    img.style.height = '200px';
-    img.style.objectFit = 'cover';
+    img.decoding = 'async';
 
     const info = document.createElement('div');
     info.className = 'page-card__info';
@@ -196,6 +201,14 @@ async function compressImages() {
   const maxWidth = parseInt(maxWidthInput.value) || 1920;
   const maxHeight = parseInt(maxHeightInput.value) || 1080;
 
+  // Revoke previous compressed URLs before rebuilding
+  for (const item of uploadedFiles) {
+    if (item.compressedUrl) {
+      URL.revokeObjectURL(item.compressedUrl);
+      item.compressedUrl = null;
+    }
+  }
+
   compressedImages = [];
 
   for (let i = 0; i < uploadedFiles.length; i++) {
@@ -210,10 +223,6 @@ async function compressImages() {
       );
 
       item.compressedBlob = blob;
-
-      if (item.compressedUrl) {
-        URL.revokeObjectURL(item.compressedUrl);
-      }
       item.compressedUrl = URL.createObjectURL(blob);
 
       compressedImages.push({
@@ -221,6 +230,7 @@ async function compressImages() {
         compressed: blob,
         url: item.compressedUrl,
         savings: ((1 - blob.size / item.file.size) * 100).toFixed(1),
+        sourceIndex: i,
       });
     } catch (err) {
       console.error(`Failed to compress ${item.file.name}:`, err);
@@ -257,36 +267,195 @@ async function compressImages() {
   }
 }
 
-async function compressImage(file, targetFormat, quality, resizeOptions) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+/**
+ * Read EXIF orientation from JPEG and return the orientation value (1–8), or 1 if none/not JPEG.
+ */
+async function getExifOrientation(file) {
+  if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+    return 1;
+  }
 
-      if (resizeOptions) {
-        const ratio = Math.min(resizeOptions.maxWidth / width, resizeOptions.maxHeight / height, 1);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
+  try {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+
+    // Check for EXIF marker
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return 1;
+
+    let pos = 2;
+    while (pos < bytes.length) {
+      if (bytes[pos] !== 0xff) break;
+      const marker = bytes[pos + 1];
+      const size = (bytes[pos + 2] << 8) | bytes[pos + 3];
+
+      // APP1 marker = EXIF
+      if (marker === 0xe1) {
+        const exifStart = pos + 4;
+        // Check for "Exif" string
+        if (
+          bytes[exifStart] === 0x45 &&
+          bytes[exifStart + 1] === 0x78 &&
+          bytes[exifStart + 2] === 0x69 &&
+          bytes[exifStart + 3] === 0x66
+        ) {
+          const tiffStart = exifStart + 6;
+          const bigEndian = bytes[tiffStart] === 0x4d && bytes[tiffStart + 1] === 0x4d;
+          const littleEndian = bytes[tiffStart] === 0x49 && bytes[tiffStart + 1] === 0x49;
+          if (!bigEndian && !littleEndian) return 1;
+
+          const read16 = (offset) =>
+            bigEndian
+              ? (bytes[tiffStart + offset] << 8) | bytes[tiffStart + offset + 1]
+              : bytes[tiffStart + offset] | (bytes[tiffStart + offset + 1] << 8);
+
+          const ifdOffset = read16(4) === 0x002a ? 4 : -1;
+          if (ifdOffset === -1) return 1;
+
+          const numEntries = read16(ifdOffset + 2);
+
+          for (let j = 0; j < numEntries; j++) {
+            const entryOffset = ifdOffset + 4 + j * 12;
+            const tag = read16(entryOffset);
+            if (tag === 0x0112) {
+              // Orientation tag
+              const value = read16(entryOffset + 8);
+              return value >= 1 && value <= 8 ? value : 1;
+            }
+          }
+        }
+        return 1;
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      // Skip to next marker
+      pos += 2 + size;
+    }
+  } catch (err) {
+    // Ignore errors, default to orientation 1
+  }
+
+  return 1;
+}
+
+/**
+ * Apply EXIF orientation to canvas context transforms.
+ * Based on https://stackoverflow.com/a/31294623 with simplified logic.
+ */
+function applyOrientation(ctx, orientation, width, height) {
+  switch (orientation) {
+    case 2:
+      ctx.transform(-1, 0, 0, 1, width, 0);
+      break;
+    case 3:
+      ctx.transform(-1, 0, 0, -1, width, height);
+      break;
+    case 4:
+      ctx.transform(1, 0, 0, -1, 0, height);
+      break;
+    case 5:
+      ctx.transform(0, 1, 1, 0, 0, 0);
+      break;
+    case 6:
+      ctx.transform(0, 1, -1, 0, height, 0);
+      break;
+    case 7:
+      ctx.transform(0, -1, -1, 0, height, width);
+      break;
+    case 8:
+      ctx.transform(0, -1, 1, 0, 0, width);
+      break;
+    default:
+      // orientation 1 = no transform
+      break;
+  }
+}
+
+async function compressImage(file, targetFormat, quality, resizeOptions) {
+  // Get EXIF orientation for JPEGs
+  const orientation = await getExifOrientation(file);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      // Determine actual dimensions after EXIF orientation
+      let isRotated = orientation >= 5 && orientation <= 8;
+      let naturalW = img.width;
+      let naturalH = img.height;
+
+      // For orientations 5-8, swap dimensions for resize calculations
+      let effectiveW = isRotated ? naturalH : naturalW;
+      let effectiveH = isRotated ? naturalW : naturalH;
+
+      let width = effectiveW;
+      let height = effectiveH;
+
+      if (resizeOptions) {
+        const ratio = Math.min(
+          resizeOptions.maxWidth / effectiveW,
+          resizeOptions.maxHeight / effectiveH,
+          1,
+        );
+        width = Math.floor(effectiveW * ratio);
+        height = Math.floor(effectiveH * ratio);
+      }
+
+      // Guard against canvas size limits (mobile Safari ~16.7MP)
+      if (width * height > MAX_CANVAS_PIXELS) {
+        const scale = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
+        width = Math.floor(width * scale);
+        height = Math.floor(height * scale);
+      }
+
+      const canvas = document.createElement('canvas');
+
+      // For rotated orientations, swap canvas dimensions
+      if (isRotated) {
+        canvas.width = height;
+        canvas.height = width;
+      } else {
+        canvas.width = width;
+        canvas.height = height;
+      }
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
 
+      // Apply EXIF orientation transform
+      if (orientation > 1) {
+        applyOrientation(ctx, orientation, canvas.width, canvas.height);
+      }
+
+      ctx.drawImage(img, 0, 0, naturalW, naturalH, 0, 0, width, height);
+
+      // Clean up
+      URL.revokeObjectURL(objUrl);
+
+      // Determine MIME type
       const mime = targetFormat ? `image/${targetFormat}` : file.type;
-      const blob = await canvas.toBlob(resolve, mime, quality);
+      const safeMime = mime === 'image/jpg' ? 'image/jpeg' : mime;
 
-      if (!blob) {
-        reject(new Error('Compression failed'));
+      try {
+        const blob = await new Promise((res, rej) => {
+          canvas.toBlob(
+            (b) => {
+              if (b) res(b);
+              else rej(new Error('Compression failed: toBlob returned null'));
+            },
+            safeMime,
+            quality,
+          );
+        });
+        resolve(blob);
+      } catch (err) {
+        reject(err);
       }
     };
 
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objUrl);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = objUrl;
   });
 }
 
@@ -300,13 +469,13 @@ function updateResultInfo() {
     return;
   }
 
-  const totalOriginal = uploadedFiles.reduce((sum, item) => sum + item.file.size, 0);
+  const totalOriginal = compressedImages.reduce((sum, item) => sum + item.original.size, 0);
   const totalCompressed = compressedImages.reduce((sum, item) => sum + item.compressed.size, 0);
   const savings = ((1 - totalCompressed / totalOriginal) * 100).toFixed(1);
   const savedBytes = totalOriginal - totalCompressed;
 
   const details = [];
-  if (uploadedFiles.length === 1) {
+  if (compressedImages.length === 1) {
     details.push(`${t('result.original')}: ${formatBytes(totalOriginal)}`);
     details.push(`${t('result.compressed')}: ${formatBytes(totalCompressed)}`);
     details.push(t('result.savings', { percent: savings, saved: formatBytes(savedBytes) }));
@@ -322,7 +491,7 @@ function downloadCurrentImage() {
   const item = compressedImages[0];
   const a = document.createElement('a');
   const ext = item.compressed.type.split('/')[1] || 'jpg';
-  const originalName = uploadedFiles[0].file.name.replace(/\.[^.]+$/, '');
+  const originalName = item.original.name.replace(/\.[^.]+$/, '');
   a.href = item.url;
   a.download = `${originalName}-compressed.${ext}`;
   document.body.appendChild(a);
@@ -337,7 +506,7 @@ function downloadAllImages() {
     setTimeout(() => {
       const a = document.createElement('a');
       const ext = item.compressed.type.split('/')[1] || 'jpg';
-      const originalName = uploadedFiles[index].file.name.replace(/\.[^.]+$/, '');
+      const originalName = item.original.name.replace(/\.[^.]+$/, '');
       a.href = item.url;
       a.download = `${originalName}-compressed.${ext}`;
       document.body.appendChild(a);
@@ -348,6 +517,16 @@ function downloadAllImages() {
 }
 
 function resetWorkspace() {
+  // Revoke all object URLs to prevent memory leaks
+  for (const item of uploadedFiles) {
+    if (item.previewUrl) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
+    if (item.compressedUrl) {
+      URL.revokeObjectURL(item.compressedUrl);
+    }
+  }
+
   uploadedFiles = [];
   compressedImages = [];
   workspace.hidden = true;
@@ -359,6 +538,8 @@ function resetWorkspace() {
   qualitySlider.value = 80;
   updateQualityDisplay();
   fileInput.value = '';
+  resizeToggle.checked = false;
+  resizeFields.hidden = true;
 }
 
 function formatBytes(bytes) {

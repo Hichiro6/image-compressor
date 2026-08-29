@@ -46,6 +46,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Processing {current} / {total}',
     'progress.completed': 'All images compressed',
+    'progress.loaded': '{count} image(s) added',
 
     'result.label': 'Compression complete',
     'result.original': 'Original',
@@ -89,6 +90,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Traitement {current} / {total}',
     'progress.completed': 'Images compressées',
+    'progress.loaded': '{count} image(s) ajoutée(s)',
 
     'result.label': 'Compression terminée',
     'result.original': 'Original',
@@ -132,6 +134,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Verarbeite {current} / {total}',
     'progress.completed': 'Alle Bilder komprimiert',
+    'progress.loaded': '{count} Bild(er) hinzugefügt',
 
     'result.label': 'Komprimierung abgeschlossen',
     'result.original': 'Original',
@@ -175,6 +178,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Procesando {current} / {total}',
     'progress.completed': 'Todas las imágenes comprimidas',
+    'progress.loaded': '{count} imagen(es) añadida(s)',
 
     'result.label': 'Compresión completa',
     'result.original': 'Original',
@@ -218,6 +222,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Processando {current} / {total}',
     'progress.completed': 'Todas imagens comprimidas',
+    'progress.loaded': '{count} imagem(ns) adicionada(s)',
 
     'result.label': 'Compressão completa',
     'result.original': 'Original',
@@ -261,6 +266,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Verwerken {current} / {total}',
     'progress.completed': 'Alle afbeeldingen gecomprimeerd',
+    'progress.loaded': '{count} afbeelding(en) toegevoegd',
 
     'result.label': 'Compressie voltooid',
     'result.original': 'Origineel',
@@ -304,6 +310,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Elaborazione {current} / {total}',
     'progress.completed': 'Tutte le immagini compresse',
+    'progress.loaded': "{count} immagine/i aggiunta/e",
 
     'result.label': 'Compressione completata',
     'result.original': 'Originale',
@@ -395,23 +402,20 @@ export async function initI18n() {
 }
 
 function setupLangSelector(container) {
-  const select = document.createElement('select');
-  select.className = 'lang-selector';
-  select.setAttribute('aria-label', 'Select language');
-
   for (const [code, lang] of Object.entries(LANGUAGES)) {
-    const option = document.createElement('option');
-    option.value = code;
-    option.textContent = lang.name;
-    option.selected = code === currentLang;
-    select.appendChild(option);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
+    btn.textContent = code.toUpperCase();
+    btn.setAttribute('aria-label', `Switch language to ${lang.name}`);
+    btn.setAttribute('aria-pressed', String(code === currentLang));
+
+    btn.addEventListener('click', () => {
+      if (setCurrentLang(code)) {
+        window.location.reload();
+      }
+    });
+
+    container.appendChild(btn);
   }
-
-  select.addEventListener('change', () => {
-    if (setCurrentLang(select.value)) {
-      window.location.reload();
-    }
-  });
-
-  container.appendChild(select);
 }
