@@ -6,21 +6,23 @@
 export const STORAGE_KEY = 'image-compressor-lang';
 
 export const LANGUAGES = {
-  en: { code: 'en', name: 'English' },
-  fr: { code: 'fr', name: 'Français' },
-  de: { code: 'de', name: 'Deutsch' },
-  es: { code: 'es', name: 'Español' },
-  pt: { code: 'pt', name: 'Português' },
-  nl: { code: 'nl', name: 'Nederlands' },
-  it: { code: 'it', name: 'Italiano' },
+  en: { code: 'en', name: 'English', flag: '🇬🇧' },
+  fr: { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  de: { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  es: { code: 'es', name: 'Español', flag: '🇪🇸' },
+  pt: { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  nl: { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+  it: { code: 'it', name: 'Italiano', flag: '🇮🇹' },
 };
 
 export const TRANSLATIONS = {
   en: {
     'app.title': 'Image Compressor',
     'app.tagline': 'Compress JPEG, PNG, WebP images — 100% in your browser',
-    'privacy.badge': 'Client-side only',
-    'privacy.tooltip': 'No data leaves your device',
+    'privacy.badge': '🔒 Client-side only',
+    'privacy.tooltip': 'Your images never leave your browser',
+    'privacy.link': 'View on GitHub',
+    'footer.bmc': 'Buy me a coffee',
 
     'dropzone.title': 'Drop images here',
     'dropzone.subtitle': 'or click to browse',
@@ -55,16 +57,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': 'Please upload an image first',
     'error.failed': 'Compression failed: {msg}',
-
-    'footer.privacy': 'Your images never leave your browser',
-    'footer.openSource': 'Open Source',
   },
 
   fr: {
     'app.title': 'Image Compressor',
     'app.tagline': 'Compresser JPEG, PNG, WebP — 100% dans votre navigateur',
-    'privacy.badge': 'Client-side uniquement',
-    'privacy.tooltip': 'Aucune donnée ne quitte votre appareil',
+    'privacy.badge': '🔒 Client-side uniquement',
+    'privacy.tooltip': 'Vos images ne quittent jamais votre navigateur',
+    'privacy.link': 'Voir sur GitHub',
+    'footer.bmc': 'Offrir un café',
 
     'dropzone.title': 'Déposez vos images ici',
     'dropzone.subtitle': 'ou cliquez pour parcourir',
@@ -99,16 +100,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': "Veuillez télécharger une image d'abord",
     'error.failed': 'Échec compression : {msg}',
-
-    'footer.privacy': 'Vos images ne quittent jamais votre navigateur',
-    'footer.openSource': 'Open Source',
   },
 
   de: {
     'app.title': 'Image Compressor',
     'app.tagline': 'JPEG, PNG, WebP komprimieren — 100% im Browser',
-    'privacy.badge': 'Nur Client-Seite',
-    'privacy.tooltip': 'Keine Daten verlassen Ihr Gerät',
+    'privacy.badge': '🔒 Nur Client-Seite',
+    'privacy.tooltip': 'Ihre Bilder verlassen nie Ihren Browser',
+    'privacy.link': 'Auf GitHub ansehen',
+    'footer.bmc': 'Kaffee ausgeben',
 
     'dropzone.title': 'Bilder hier ablegen',
     'dropzone.subtitle': 'oder klicken zum Durchsuchen',
@@ -143,16 +143,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': 'Bitte zuerst ein Bild hochladen',
     'error.failed': 'Komprimierung fehlgeschlagen: {msg}',
-
-    'footer.privacy': 'Ihre Bilder verlassen nie Ihren Browser',
-    'footer.openSource': 'Open Source',
   },
 
   es: {
     'app.title': 'Image Compressor',
     'app.tagline': 'Comprimir JPEG, PNG, WebP — 100% en el navegador',
-    'privacy.badge': 'Solo cliente',
-    'privacy.tooltip': 'Ningún dato sale de tu dispositivo',
+    'privacy.badge': '🔒 Solo cliente',
+    'privacy.tooltip': 'Tus imágenes nunca salen de tu navegador',
+    'privacy.link': 'Ver en GitHub',
+    'footer.bmc': 'Invítame un café',
 
     'dropzone.title': 'Arrastra imágenes aquí',
     'dropzone.subtitle': 'o haz clic para buscar',
@@ -187,16 +186,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': 'Por favor sube una imagen primero',
     'error.failed': 'Compresión fallida: {msg}',
-
-    'footer.privacy': 'Tus imágenes nunca salen de tu navegador',
-    'footer.openSource': 'Código abierto',
   },
 
   pt: {
     'app.title': 'Image Compressor',
     'app.tagline': 'Comprimir JPEG, PNG, WebP — 100% no navegador',
-    'privacy.badge': 'Apenas cliente',
-    'privacy.tooltip': 'Nenhum dado sai do seu dispositivo',
+    'privacy.badge': '🔒 Apenas cliente',
+    'privacy.tooltip': 'Suas imagens nunca saem do navegador',
+    'privacy.link': 'Ver no GitHub',
+    'footer.bmc': 'Pague um café',
 
     'dropzone.title': 'Solte imagens aqui',
     'dropzone.subtitle': 'ou clique para navegar',
@@ -231,16 +229,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': 'Por favor faça upload de uma imagem primeiro',
     'error.failed': 'Compressão falhou: {msg}',
-
-    'footer.privacy': 'Suas imagens nunca saem do navegador',
-    'footer.openSource': 'Código aberto',
   },
 
   nl: {
     'app.title': 'Image Compressor',
     'app.tagline': 'JPEG, PNG, WebP comprimeren — 100% in je browser',
-    'privacy.badge': 'Alleen cliëntkant',
-    'privacy.tooltip': 'Geen gegevens verlaten je apparaat',
+    'privacy.badge': '🔒 Alleen cliëntkant',
+    'privacy.tooltip': 'Jouw afbeeldingen verlaten nooit je browser',
+    'privacy.link': 'Bekijk op GitHub',
+    'footer.bmc': 'Koffie aanbieden',
 
     'dropzone.title': 'Sleep afbeeldingen hierheen',
     'dropzone.subtitle': 'of klik om te bladeren',
@@ -275,16 +272,15 @@ export const TRANSLATIONS = {
 
     'error.noFile': 'Upload eerst een afbeelding',
     'error.failed': 'Compressie mislukt: {msg}',
-
-    'footer.privacy': 'Jouw afbeeldingen verlaten nooit je browser',
-    'footer.openSource': 'Open bron',
   },
 
   it: {
     'app.title': 'Image Compressor',
     'app.tagline': 'Comprimi JPEG, PNG, WebP — 100% nel browser',
-    'privacy.badge': 'Solo lato client',
-    'privacy.tooltip': 'Nessun dato lascia il tuo dispositivo',
+    'privacy.badge': '🔒 Solo lato client',
+    'privacy.tooltip': 'Le tue immagini non lasciano mai il browser',
+    'privacy.link': 'Vedi su GitHub',
+    'footer.bmc': 'Offri un caffè',
 
     'dropzone.title': 'Trascina le immagini qui',
     'dropzone.subtitle': 'o clicca per sfogliare',
@@ -319,9 +315,6 @@ export const TRANSLATIONS = {
 
     'error.noFile': "Carica prima un'immagine",
     'error.failed': 'Compressione fallita: {msg}',
-
-    'footer.privacy': 'Le tue immagini non lasciano mai il browser',
-    'footer.openSource': 'Open Source',
   },
 };
 
@@ -406,8 +399,10 @@ function setupLangSelector(container) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `lang-btn${code === currentLang ? ' active' : ''}`;
-    btn.textContent = code.toUpperCase();
+    btn.textContent = lang.flag;
+    btn.title = lang.name;
     btn.setAttribute('aria-label', `Switch language to ${lang.name}`);
+    btn.setAttribute('data-lang', code);
     btn.setAttribute('aria-pressed', String(code === currentLang));
 
     btn.addEventListener('click', () => {
