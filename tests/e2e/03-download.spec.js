@@ -8,8 +8,9 @@
  * NOTE: Compression tests are skipped because canvas compression
  * is too slow in headless browsers for reliable E2E testing.
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+
+import path from 'node:path';
+import { expect, test } from '@playwright/test';
 import { generateAllFixtures } from './helpers/test-fixtures-gen.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');

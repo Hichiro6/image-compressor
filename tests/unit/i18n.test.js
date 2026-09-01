@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { LANGUAGES, TRANSLATIONS, STORAGE_KEY } from '../../src/i18n.js';
+import { describe, expect, it } from 'vitest';
+import { LANGUAGES, STORAGE_KEY, TRANSLATIONS } from '../../src/i18n.js';
 
 describe('i18n module', () => {
   describe('LANGUAGES', () => {

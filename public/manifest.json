@@ -8,14 +8,11 @@
   "theme_color": "#08090a",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "./favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }
   ],
-  "categories": [
-    "productivity",
-    "utilities"
-  ],
+  "categories": ["productivity", "utilities"],
   "lang": "en-US"
 }

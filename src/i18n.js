@@ -310,7 +310,7 @@ export const TRANSLATIONS = {
 
     'progress.processing': 'Elaborazione {current} / {total}',
     'progress.completed': 'Tutte le immagini compresse',
-    'progress.loaded': "{count} immagine/i aggiunta/e",
+    'progress.loaded': '{count} immagine/i aggiunta/e',
 
     'result.label': 'Compressione completata',
     'result.original': 'Originale',
@@ -334,7 +334,7 @@ function detectLanguage() {
     if (stored && LANGUAGES[stored]) {
       return stored;
     }
-  } catch (e) {
+  } catch (_e) {
     // localStorage not available
   }
   const browserLang = navigator.language.slice(0, 2);
@@ -353,7 +353,7 @@ export function setCurrentLang(langCode) {
     currentLang = langCode;
     try {
       localStorage.setItem(STORAGE_KEY, langCode);
-    } catch (e) {
+    } catch (_e) {
       // localStorage not available
     }
     document.documentElement.lang = langCode;
@@ -405,7 +405,7 @@ function setupLangSelector(container) {
   for (const [code, lang] of Object.entries(LANGUAGES)) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
+    btn.className = `lang-btn${code === currentLang ? ' active' : ''}`;
     btn.textContent = code.toUpperCase();
     btn.setAttribute('aria-label', `Switch language to ${lang.name}`);
     btn.setAttribute('aria-pressed', String(code === currentLang));

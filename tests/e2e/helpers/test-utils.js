@@ -3,7 +3,7 @@
  * Fournit des helpers communs pour uploader des fichiers de test
  * et attendre que la compression soit terminée.
  */
-import path from 'path';
+import path from 'node:path';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
@@ -24,10 +24,10 @@ export async function uploadTestFile(page, filename = 'test-image.png') {
 
   // Wait for workspace to appear
   await page.waitForSelector('#workspace:not([hidden])', { timeout: 10000 });
-  
+
   // Wait for thumbnail to render
   await page.waitForSelector('.page-card', { timeout: 10000 });
-  
+
   return {
     filename: path.basename(filename),
   };

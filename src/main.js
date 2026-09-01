@@ -46,12 +46,7 @@ async function init() {
 
 function setupEventListeners() {
   dropzone.addEventListener('click', () => fileInput.click());
-  dropzone.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      fileInput.click();
-    }
-  });
+  // Native <button> handles Enter/Space activation; keep drag handlers
 
   dropzone.addEventListener('dragover', handleDragOver);
   dropzone.addEventListener('dragleave', handleDragLeave);
@@ -142,9 +137,8 @@ async function renderThumbnails() {
   }
 
   uploadedFiles.forEach((item, index) => {
-    const card = document.createElement('div');
+    const card = document.createElement('li');
     card.className = 'page-card';
-    card.setAttribute('role', 'listitem');
     card.setAttribute('aria-label', `Image ${index + 1}: ${item.file.name}`);
 
     const img = document.createElement('img');
@@ -196,10 +190,10 @@ async function compressImages() {
   resultInfo.hidden = true;
 
   const format = formatSelect.value;
-  const quality = parseInt(qualitySlider.value) / 100;
+  const quality = parseInt(qualitySlider.value, 10) / 100;
   const doResize = resizeToggle.checked;
-  const maxWidth = parseInt(maxWidthInput.value) || 1920;
-  const maxHeight = parseInt(maxHeightInput.value) || 1080;
+  const maxWidth = parseInt(maxWidthInput.value, 10) || 1920;
+  const maxHeight = parseInt(maxHeightInput.value, 10) || 1080;
 
   // Revoke previous compressed URLs before rebuilding
   for (const item of uploadedFiles) {
@@ -329,7 +323,7 @@ async function getExifOrientation(file) {
       // Skip to next marker
       pos += 2 + size;
     }
-  } catch (err) {
+  } catch (_err) {
     // Ignore errors, default to orientation 1
   }
 
@@ -379,13 +373,13 @@ async function compressImage(file, targetFormat, quality, resizeOptions) {
 
     img.onload = async () => {
       // Determine actual dimensions after EXIF orientation
-      let isRotated = orientation >= 5 && orientation <= 8;
-      let naturalW = img.width;
-      let naturalH = img.height;
+      const isRotated = orientation >= 5 && orientation <= 8;
+      const naturalW = img.width;
+      const naturalH = img.height;
 
       // For orientations 5-8, swap dimensions for resize calculations
-      let effectiveW = isRotated ? naturalH : naturalW;
-      let effectiveH = isRotated ? naturalW : naturalH;
+      const effectiveW = isRotated ? naturalH : naturalW;
+      const effectiveH = isRotated ? naturalW : naturalH;
 
       let width = effectiveW;
       let height = effectiveH;

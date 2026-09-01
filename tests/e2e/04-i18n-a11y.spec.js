@@ -8,7 +8,7 @@
  * - Keyboard navigation
  * - Screen reader live region
  */
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 const STORAGE_KEY = 'image-compressor-lang';
 
